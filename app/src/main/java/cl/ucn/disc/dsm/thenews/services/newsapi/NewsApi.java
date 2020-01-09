@@ -1,6 +1,8 @@
 package cl.ucn.disc.dsm.thenews.services.newsapi;
 
 import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Query;
@@ -36,6 +38,8 @@ public interface NewsApi {
   // TODO: Change the list of sources.
   @GET("everything?sources=ars-technica,wired,hacker-news,recode")
   Call<NewsApiResult> getEverything(@Query("pageSize") final int pageSize);
+
+
 
 }
 
