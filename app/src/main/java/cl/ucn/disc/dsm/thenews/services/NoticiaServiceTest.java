@@ -31,7 +31,7 @@ public final class NoticiaServiceTest {
     final List<Noticia> noticias = noticiaService.getNoticias(2);
 
     Assert.assertNotNull(noticias);
-    Assert.assertEquals(noticias.size(), 2, "Error de tamanio");
+    Assert.assertEquals(String.valueOf(noticias.size()), 2, "Error de tamanio");
 
     for (final Noticia noticia : noticias) {
       log.debug("Noticia: {}.", noticia);
