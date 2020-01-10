@@ -1,13 +1,12 @@
 package cl.ucn.disc.dsm.thenews.services.newsapi;
 
-import android.view.WindowManager.LayoutParams;
+
 import cl.ucn.disc.dsm.thenews.model.Noticia;
 import cl.ucn.disc.dsm.thenews.services.NoticiaService;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.logging.ErrorManager;
 import java.util.stream.Collectors;
 import javax.xml.transform.Transformer;
 import net.openhft.hashing.LongHashFunction;
@@ -26,9 +25,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NewsApiNoticiaService {
 
-
-
-
   /**
    * Test {@link NoticiaService#getNoticias(int)} with NewsAPI.org
    */
@@ -41,13 +37,13 @@ public class NewsApiNoticiaService {
     log.debug("Testing the NewsApiNoticiaService, requesting {} News.", size);
 
     // The noticia service
-    final NoticiaService noticiaService = new NewsApiNoticiaService();
+    final NoticiaService noticiaService = (NoticiaService) new NewsApiNoticiaService();
 
     // The List of Noticia.
     final List<Noticia> noticias = noticiaService.getNoticias(size);
 
     Assert.assertNotNull(noticias);
-    Assert.assertEquals(noticias.size(), size, "Error de tamanio");
+    Assert.assertEquals(String.valueOf(noticias.size()), size, "Error de tamanio");
 
     for (final Noticia noticia : noticias) {
       log.debug("Noticia: {}.", noticia);
