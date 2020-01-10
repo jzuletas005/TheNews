@@ -12,6 +12,7 @@ import cl.ucn.disc.dsm.thenews.databinding.ActivityMainBinding;
 import cl.ucn.disc.dsm.thenews.model.Noticia;
 import cl.ucn.disc.dsm.thenews.services.NoticiaService;
 import cl.ucn.disc.dsm.thenews.services.newsapi.NewsApiNoticiaService;
+import java.util.List;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
    * The Logger
    */
   private static final Logger log = LoggerFactory.getLogger(MainActivity.class);
+
+
 
   /**
    * @param savedInstanceState to use.
@@ -116,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // The NoticiaService
-    this.noticiaService = new NewsApiNoticiaService();
+    this.noticiaService = (NoticiaService) new NewsApiNoticiaService();
 
   }
 
