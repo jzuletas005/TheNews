@@ -1,8 +1,7 @@
 package cl.ucn.disc.dsm.thenews.model;
 
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-//import org.junit.jupiter.api.Test;
+import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.threeten.bp.ZonedDateTime;
@@ -14,6 +13,7 @@ public class NoticiaTest {
    * The Logger.
    */
   private static final Logger log = LoggerFactory.getLogger(NoticiaTest.class);
+
 
   /**
    * The Test of Constructor.
@@ -38,15 +38,15 @@ public class NoticiaTest {
     final Noticia noticia = new Noticia(id, titulo, fuente, autor, url, urlFoto, resumen, contenido, fecha);
 
     // Testing
-    Assertions.assertEquals(id, noticia.getId());
-    Assertions.assertEquals(titulo, noticia.getTitulo());
-    Assertions.assertEquals(fuente, noticia.getFuente());
-    Assertions.assertEquals(autor, noticia.getAutor());
-    Assertions.assertEquals(url, noticia.getUrl());
-    Assertions.assertEquals(urlFoto, noticia.getUrlFoto());
-    Assertions.assertEquals(resumen, noticia.getResumen());
-    Assertions.assertEquals(contenido, noticia.getContenido());
-    Assertions.assertEquals(fecha, noticia.getFecha());
+    Assert.assertEquals(id, noticia.getId());
+    Assert.assertEquals(titulo, noticia.getTitulo());
+    Assert.assertEquals(fuente, noticia.getFuente());
+    Assert.assertEquals(autor, noticia.getAutor());
+    Assert.assertEquals(url, noticia.getUrl());
+    Assert.assertEquals(urlFoto, noticia.getUrlFoto());
+    Assert.assertEquals(resumen, noticia.getResumen());
+    Assert.assertEquals(contenido, noticia.getContenido());
+    Assert.assertEquals(fecha, noticia.getFecha());
 
     log.debug("Done.");
 
