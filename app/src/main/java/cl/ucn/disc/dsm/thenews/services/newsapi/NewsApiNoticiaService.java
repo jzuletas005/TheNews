@@ -1,6 +1,7 @@
 package cl.ucn.disc.dsm.thenews.services.newsapi;
 
 
+
 import cl.ucn.disc.dsm.thenews.model.Noticia;
 import cl.ucn.disc.dsm.thenews.services.NoticiaService;
 import java.io.IOException;
@@ -8,13 +9,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.xml.transform.Transformer;
 import net.openhft.hashing.LongHashFunction;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.junit.Test;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.threeten.bp.ZonedDateTime;
 import org.threeten.bp.format.DateTimeParseException;
 import retrofit2.Call;
@@ -25,6 +26,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NewsApiNoticiaService {
 
+
+  private static final Logger log = LoggerFactory.getLogger(NewsApiNoticiaService.class);
   /**
    * Test {@link NoticiaService#getNoticias(int)} with NewsAPI.org
    */
@@ -33,7 +36,7 @@ public class NewsApiNoticiaService {
 
     final int size = 20;
 
-    Logger log;
+
     log.debug("Testing the NewsApiNoticiaService, requesting {} News.", size);
 
     // The noticia service
@@ -42,8 +45,8 @@ public class NewsApiNoticiaService {
     // The List of Noticia.
     final List<Noticia> noticias = noticiaService.getNoticias(size);
 
-    Assert.assertNotNull(noticias);
-    Assert.assertEquals(String.valueOf(noticias.size()), size, "Error de tamanio");
+    Assertions.assertNotNull(noticias);
+    Assertions.assertEquals(String.valueOf(noticias.size()), size, "Error de tamanio");
 
     for (final Noticia noticia : noticias) {
       log.debug("Noticia: {}.", noticia);
@@ -81,7 +84,7 @@ public class NewsApiNoticiaService {
    * @param theCall to use.
    * @return the {@link List} of {@link Noticia}.
    */
-  private static List<Noticia> getNoticiasFromCall(final Call<NewsApiResult> theCall) {
+  private static List<Object> getNoticiasFromCall(final Call<NewsApiResult> theCall) {
 
     try {
 
@@ -116,7 +119,7 @@ public class NewsApiNoticiaService {
           .map(Transformer::transform)
           .collect(Collectors.toList());
 
-    } catch (final IOException | IOException ex) {
+    } catch (final IOException ex) {
       throw new NewsAPIException("Can't get the NewsResult", ex);
     }
 
@@ -139,7 +142,7 @@ public class NewsApiNoticiaService {
     final String host = getHost(article.url);
 
     // Si el articulo es null ..
-    Logger log;
+
     if (article.title == null) {
 
       log.warn("Article without title: {}", toString(article));
@@ -220,7 +223,7 @@ public class NewsApiNoticiaService {
     } catch (DateTimeParseException ex) {
 
       // Mensaje de debug
-      Logger log;
+
       log.error("Can't parse date: ->{}<-. Error: ", fecha, ex);
 
       // Anido la DateTimeParseException en una NoticiaTransformerException.
@@ -285,8 +288,8 @@ public class NewsApiNoticiaService {
    * @param pageSize how many.
    * @return the {@link List} of {@link Noticia}.
    */
-  @Override
-  public List<Noticia> getNoticias(int pageSize) {
+  //@Override
+  public List<Object> getNoticias(int pageSize) {
 
     // the Call
     final Call<NewsApiResult> theCall = this.newsApi.getEverything(pageSize);
