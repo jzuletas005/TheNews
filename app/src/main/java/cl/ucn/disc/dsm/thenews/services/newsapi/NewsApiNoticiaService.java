@@ -8,8 +8,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.openhft.hashing.LongHashFunction;
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.jupiter.api.Assertions;
@@ -64,6 +69,19 @@ public class NewsApiNoticiaService {
    * The Constructor.
    */
   public NewsApiNoticiaService() {
+
+    // Logging with slf4j
+    final HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(log::debug)
+        .setLevel(Level.BODY);
+
+    // Web Client
+    final OkHttpClient httpClient = new Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .writeTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.SECONDS)
+        .callTimeout(10, TimeUnit.SECONDS)
+        .addNetworkInterceptor(loggingInterceptor)
+        .build();
 
     // https://futurestud.io/tutorials/retrofit-getting-started-and-android-client
     this.newsApi = new Retrofit.Builder()
@@ -123,148 +141,6 @@ public class NewsApiNoticiaService {
       throw new NewsAPIException("Can't get the NewsResult", ex);
     }
 
-  }
-
-  /**
-   * Article to Noticia.
-   *
-   * @param article to transform
-   * @return the Noticia.
-   */
-  public static Noticia transform(final Article article) {
-
-    // Nullity
-    if (article == null) {
-      throw new NewsApiNoticiaService.NewsAPIException("Article was null");
-    }
-
-    // The host
-    final String host = getHost(article.url);
-
-    // Si el articulo es null ..
-
-    if (article.title == null) {
-
-      log.warn("Article without title: {}", toString(article));
-
-      // .. y el contenido es null, lanzar exception!
-      if (article.description == null) {
-        throw new NewsApiNoticiaService.NewsAPIException("Article without title and description");
-      }
-
-      // FIXME: Cambiar el titulo por alguna informacion disponible
-      article.title = "No Title*";
-    }
-
-    // FIXED: En caso de no haber una fuente.
-    if (article.source == null) {
-      article.source = new Source();
-
-      if (host != null) {
-        article.source.name = host;
-      } else {
-        article.source.name = "No Source*";
-        log.warn("Article without source: {}", toString(article));
-      }
-    }
-
-    // FIXED: Si el articulo no tiene author
-    if (article.author == null) {
-
-      if (host != null) {
-        article.author = host;
-      } else {
-        article.author = "No Author*";
-        log.warn("Article without author: {}", toString(article));
-      }
-    }
-
-    // The date.
-    final ZonedDateTime publishedAt = parseZonedDateTime(article.publishedAt)
-        .withZoneSameInstant(Noticia.ZONE_ID);
-
-    // The unique id (computed from hash)
-    final Long theId = LongHashFunction.xx()
-        .hashChars(article.title + article.source.name);
-
-    // The Noticia.
-    return new Noticia(
-        theId,
-        article.title,
-        article.source.name,
-        article.author,
-        article.url,
-        article.urlToImage,
-        article.description,
-        article.content,
-        publishedAt
-    );
-
-  }
-
-  /**
-   * Convierte una fecha de {@link String} a una {@link ZonedDateTime}.
-   *
-   * @param fecha to parse.
-   * @return the fecha.
-   * @throws cl.ucn.disc.dsm.thenews.services.newsapi.NewsApiNoticiaService.NewsAPIException en caso de no lograr
-   *                                                                                         convertir la fecha.
-   */
-  private static ZonedDateTime parseZonedDateTime(final String fecha) {
-
-    // Na' que hacer si la fecha no existe
-    if (fecha == null) {
-      throw new NewsApiNoticiaService.NewsAPIException("Can't parse null fecha");
-    }
-
-    try {
-      // Tratar de convertir la fecha ..
-      return ZonedDateTime.parse(fecha);
-    } catch (DateTimeParseException ex) {
-
-      // Mensaje de debug
-
-      log.error("Can't parse date: ->{}<-. Error: ", fecha, ex);
-
-      // Anido la DateTimeParseException en una NoticiaTransformerException.
-      throw new NewsApiNoticiaService.NewsAPIException("Can't parse date: " + fecha, ex);
-    }
-  }
-
-  /**
-   * Get the host part of one url.
-   *
-   * @param url to use.
-   * @return the host part (without the www)
-   */
-  private static String getHost(final String url) {
-
-    try {
-
-      final URI uri = new URI(url);
-      final String hostname = uri.getHost();
-
-      // to provide faultproof result, check if not null then return only hostname, without www.
-      if (hostname != null) {
-        return hostname.startsWith("www.") ? hostname.substring(4) : hostname;
-      }
-
-      return null;
-
-    } catch (final URISyntaxException | NullPointerException ex) {
-      return null;
-    }
-  }
-
-  /**
-   * Transforma en String un objeto t mostrando sus atributos.
-   *
-   * @param t   to convert.
-   * @param <T> type of t.
-   * @return the object in string format.
-   */
-  public static <T> String toString(final T t) {
-    return ReflectionToStringBuilder.toString(t, ToStringStyle.MULTI_LINE_STYLE);
   }
 
   /**
