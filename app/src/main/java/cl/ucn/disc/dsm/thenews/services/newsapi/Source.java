@@ -15,6 +15,9 @@
  */
 package cl.ucn.disc.dsm.thenews.services.newsapi;
 
+/**
+ * Source
+ */
 public class Source {
 
   public String id;

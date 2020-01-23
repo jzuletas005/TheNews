@@ -15,66 +15,29 @@
  */
 package cl.ucn.disc.dsm.thenews.services.newsapi;
 
-
-
 import cl.ucn.disc.dsm.thenews.model.Noticia;
 import cl.ucn.disc.dsm.thenews.services.NoticiaService;
+import cl.ucn.disc.dsm.thenews.services.Transformer;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import net.openhft.hashing.LongHashFunction;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.logging.HttpLoggingInterceptor.Level;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.threeten.bp.ZonedDateTime;
-import org.threeten.bp.format.DateTimeParseException;
 import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class NewsApiNoticiaService {
-
+public final class NewsApiNoticiaService implements NoticiaService {
 
   private static final Logger log = LoggerFactory.getLogger(NewsApiNoticiaService.class);
-  /**
-   * Test {@link NoticiaService#getNoticias(int)} with NewsAPI.org
-   */
-  @Test
-  public void testGetNoticiasNewsApi() {
 
-    final int size = 20;
-
-
-    log.debug("Testing the NewsApiNoticiaService, requesting {} News.", size);
-
-    // The noticia service
-    final NoticiaService noticiaService = (NoticiaService) new NewsApiNoticiaService();
-
-    // The List of Noticia.
-    final List<Noticia> noticias = noticiaService.getNoticias(size);
-
-    Assertions.assertNotNull(noticias);
-    Assertions.assertEquals(String.valueOf(noticias.size()), size, "Error de tamanio");
-
-    for (final Noticia noticia : noticias) {
-      log.debug("Noticia: {}.", noticia);
-    }
-
-    log.debug("Done.");
-
-  }
   /**
    * The NewsAPI
    */
@@ -117,7 +80,7 @@ public class NewsApiNoticiaService {
    * @param theCall to use.
    * @return the {@link List} of {@link Noticia}.
    */
-  private static List<Object> getNoticiasFromCall(final Call<NewsApiResult> theCall) {
+  private static List<Noticia> getNoticiasFromCall(final Call<NewsApiResult> theCall) {
 
     try {
 
@@ -155,9 +118,7 @@ public class NewsApiNoticiaService {
     } catch (final IOException ex) {
       throw new NewsAPIException("Can't get the NewsResult", ex);
     }
-
   }
-
   /**
    * The Exception.
    */
@@ -172,20 +133,59 @@ public class NewsApiNoticiaService {
     }
 
   }
-
   /**
    * Get the Noticias from the Call.
    *
    * @param pageSize how many.
    * @return the {@link List} of {@link Noticia}.
    */
-  //@Override
-  public List<Object> getNoticias(int pageSize) {
+  @Override
+  public List<Noticia> getNoticias(int pageSize) {
 
     // the Call
     final Call<NewsApiResult> theCall = this.newsApi.getEverything(pageSize);
 
     // Process the Call.
     return getNoticiasFromCall(theCall);
+  }
+  @Override
+  public List<Noticia> getTopHeadLines(final int pageSize){
+
+    String country = Country.us.toString();
+    String category = Category.technology.toString();
+
+    // Call
+    final Call<NewsApiResult> call = this.newsApi.getTopHeadLines(country, category, pageSize);
+
+    // Process the Call
+    return getNoticiasFromCall(call);
+
+  }
+  /**
+   * Enum Category Class...
+   */
+  public enum Category {
+    business,
+    entertainment,
+    general,
+    health,
+    science,
+    sports,
+    technology
+  }
+
+  /**
+   * Enum Country Class...
+   */
+  public enum Country {
+    ar, // Argentina
+    co, // Colombia
+    cu, // Cuba
+    de, // Germany
+    jp, // Japan
+    mx, // Mexico
+    ru,  // Russia
+    us, // United States
+    ve // Venezuela
   }
 }
