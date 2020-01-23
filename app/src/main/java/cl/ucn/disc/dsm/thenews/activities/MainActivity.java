@@ -19,16 +19,14 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import cl.ucn.disc.dsm.thenews.R;
 import cl.ucn.disc.dsm.thenews.activities.adapters.NoticiaAdapter;
+import cl.ucn.disc.dsm.thenews.activities.adapters.NoticiaViewModel;
 import cl.ucn.disc.dsm.thenews.databinding.ActivityMainBinding;
-import cl.ucn.disc.dsm.thenews.model.Noticia;
 import cl.ucn.disc.dsm.thenews.services.NoticiaService;
-import cl.ucn.disc.dsm.thenews.services.newsapi.NewsApiNoticiaService;
-import java.util.List;
-import org.apache.commons.lang3.time.StopWatch;
+import es.dmoral.toasty.Toasty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,105 +36,6 @@ public class MainActivity extends AppCompatActivity {
    * The Logger
    */
   private static final Logger log = LoggerFactory.getLogger(MainActivity.class);
-
-
-
-  /**
-   * @param savedInstanceState to use.
-   */
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-
-    // Inflate the layout
-    ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
-
-    // Assign to the main view.
-    setContentView(binding.getRoot());
-
-    // Set the toolbar
-    {
-      this.setSupportActionBar(binding.toolbar);
-    }
-
-    // The refresh
-    {
-      binding.swlRefresh.setOnRefreshListener(() -> {
-        log.debug("Refreshing ..");
-
-        // Execute in background ..
-        AsyncTask.execute(() -> {
-
-          // How much time do we need?
-          final StopWatch stopWatch = StopWatch.createStarted();
-
-          try {
-
-            // 1. Get the List from NewsApi (in background)
-            final List<Noticia> noticias = this.noticiaService.getNoticias(50);
-
-            // (in UI)
-            this.runOnUiThread(() -> {
-
-              // 2. Set in the adapter (
-              this.noticiaAdapter.setNoticias(noticias);
-
-              // 3. Show a Toast!
-              Toast.makeText(this, "Done: " + stopWatch, Toast.LENGTH_SHORT).show();
-
-            });
-
-          } catch (Exception ex) {
-
-            log.error("Error", ex);
-
-            // (in UI)
-            this.runOnUiThread(() -> {
-
-              // Build the message
-              final StringBuffer sb = new StringBuffer("Error: ");
-              sb.append(ex.getMessage());
-              if (ex.getCause() != null) {
-                sb.append(", ");
-                sb.append(ex.getCause().getMessage());
-              }
-
-              // 3. Show the Toast!
-              Toast.makeText(this, sb.toString(), Toast.LENGTH_LONG).show();
-
-            });
-
-          } finally {
-
-            // 4. Hide the spinning circle
-            binding.swlRefresh.setRefreshing(false);
-
-          }
-
-        });
-
-      });
-    }
-
-    // The Adapter + RecyclerView
-    {
-      // The Adapter
-      this.noticiaAdapter = new NoticiaAdapter();
-
-      // The Adapter
-      binding.rvNoticias.setAdapter(this.noticiaAdapter);
-
-      // The layout (ListView)
-      binding.rvNoticias.setLayoutManager(new LinearLayoutManager(this));
-
-      // The separator (line)
-      binding.rvNoticias.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-    }
-
-    // The NoticiaService
-    this.noticiaService = (NoticiaService) new NewsApiNoticiaService();
-
-  }
 
   /**
    * The Adapter
@@ -148,4 +47,112 @@ public class MainActivity extends AppCompatActivity {
    */
   private NoticiaService noticiaService;
 
+  /**
+   * The bindings.
+   */
+  private ActivityMainBinding binding;
+
+  /**
+   * The ViewModel of Noticia.
+   */
+  private NoticiaViewModel noticiaViewModel;
+
+  /**
+   * @param savedInstanceState to use.
+   */
+  @Override
+  protected void onCreate (Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    //setContentView(R.layout.activity_main);
+
+    // Inflate the layout
+    this.binding = ActivityMainBinding.inflate(getLayoutInflater());
+
+    // Assign to the main view.
+    setContentView(binding.getRoot());
+
+    // Set the toolbar
+    {
+      this.setSupportActionBar(binding.toolbar);
+    }
+
+    // The Adapter + RecyclerView
+    {
+      // The Adapter
+      this.noticiaAdapter = new NoticiaAdapter();
+
+      // The Adapter
+      this.binding.rvNoticias.setAdapter(this.noticiaAdapter);
+
+      // The layout (ListView)
+      this.binding.rvNoticias.setLayoutManager(new LinearLayoutManager(this));
+
+      // The separator (line)
+      this.binding.rvNoticias
+          .addItemDecoration(new DividerItemDecoration
+              (this, DividerItemDecoration.VERTICAL));
+    }
+
+    // The ViewModel
+    {
+      // Build the NoticiaViewModel.
+      this.noticiaViewModel = new ViewModelProvider(this).get(NoticiaViewModel.class);
+
+      // Observe the list of noticia
+      this.noticiaViewModel.getNoticias().observe(this,
+          noticias -> this.noticiaAdapter.setNoticias(noticias));
+
+      // Observe the exception
+      this.noticiaViewModel.getException().observe(this, this::showException);
+
+    }
+
+    // The refresh
+    {
+      this.binding.swlRefresh.setOnRefreshListener(() -> {
+        log.debug("Refreshing ..");
+
+        // Run in background
+        AsyncTask.execute(() -> {
+
+          // All ok
+          final int size = this.noticiaViewModel.refresh();
+          if (size != -1) {
+
+            // In the UI
+            runOnUiThread(() -> {
+
+              // Hide the loading
+              this.binding.swlRefresh.setRefreshing(false);
+
+              // Show a message.
+              Toasty.success(this, "Noticias fetched: " + size, Toast.LENGTH_SHORT, true).show();
+
+            });
+          }
+        });
+      });
+    }
+  }
+  /**
+   * Show the exception.
+   *
+   * @param exception to use.
+   */
+  private void showException(final Exception exception) {
+
+    // Hide the loading
+    this.binding.swlRefresh.setRefreshing(false);
+
+    // Build the message
+    final StringBuilder sb = new StringBuilder("Error: ");
+    sb.append(exception.getMessage());
+    if (exception.getCause() != null) {
+      sb.append(", ");
+      sb.append(exception.getCause().getMessage());
+    }
+
+    Toasty.error(this, sb.toString(), Toast.LENGTH_LONG, true).show();
+
+  }
 }
