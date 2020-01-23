@@ -26,8 +26,6 @@ buildscript {
         classpath 'com.android.tools.build:gradle:4.0.0-alpha08'
         classpath "com.github.ben-manes:gradle-versions-plugin:0.27.0"
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
@@ -42,16 +40,12 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven { url "https://jitpack.io" }
-        maven { url "https://dl.bintray.com/ongakuer/maven/" }
+        maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
+        maven { url 'https://jitpack.io' }
         maven { url "https://jcenter.bintray.com/" }
     }
-
-
 }
 
-task clean(type: Exec) {
-    ext.lockhunter = '\"C:\\LockHunter.exe\"'
-    def buildDir = file(new File("build"))
-    commandLine 'cmd', "$lockhunter", '/delete', '/silent', buildDir
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
